@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pantalla de Turnos</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+
+    header {
+    width: 100%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: left;   /* 🔹 Centra el h1 */
+    gap: 15px;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    position: relative;
+    }
+
+    body {
+      background: rgb(58, 186, 202);
+      color: black;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .h1 {
+      color: black; /* podés cambiarlo */
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      justify-self: center; 
+    }
+
+    .logo {
+      height: 50px;
+      width: auto;
+    }
+
+    /* Recuadros principales (uno por área) */
+    .contenedor {
+      display: flex;
+      justify-content: space-between;   /* reparte los cuadros a lo largo */
+      align-items: stretch;             /* que todos tengan la misma altura */
+      flex-wrap: nowrap;                /* evita que bajen de línea */
+      width: 100%;                      /* ocupa todo el ancho */
+      gap: 10px;                        /* espacio entre cuadros */
+      padding: 0 10px;                  /* deja margen lateral */
+      box-sizing: border-box;           /* evita que el padding altere el ancho */
+      height: 85vh;  
+      margin-top: 15px;
+    }
+
+    .area {
+      background: white;
+      border-radius: 15px;
+      flex: 1;                          /* cada cuadro ocupa el mismo ancho proporcional */
+      min-width: 250px;                 /* asegura legibilidad en pantallas pequeñas */
+      padding: 25px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;          /* centra el contenido verticalmente */
+      transition: transform 0.5s ease;
+      box-shadow: 
+      0 0 0 2px black,   /* borde fuerte */
+      inset 0 0 25px grey; /* 🔹 difuminado hacia adentro */
+    }
+
+    .color {
+      font-size: 1.8em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      margin-top: 60px;
+      text-transform: uppercase;
+    }
+
+    .numero {
+      font-weight: bold;
+      font-size: clamp(2em, 12vw, 8em);
+      margin-bottom: 10px;
+      line-height: 1;
+      text-align: center;
+      margin-right: 10px;
+      white-space: nowrap;   /* 🚫 evita que el número se parta en varias líneas */
+      overflow: hidden;      /* oculta cualquier exceso (por seguridad) */
+      margin-top: 70px; 
+      justify-content: center;
+    }
+
+    .mesa {
+      font-size: 2.4em;
+      text-transform: uppercase;
+      font-weight: bold;
+      text-align: center;
+      margin: 10px 0 20px 0;  /* 👍 queda prolijo arriba */
+      line-height: 1.2; 
+    }
+
+    .blanco { background: white; color: black; }
+    .verde { background: #4CAF50; color: black; }
+    .amarillo { background: #FFEB3B; color: black; }
+
+    .destacado {  
+      animation: zoom 0.6s ease;
+    }
+
+    @keyframes zoom {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="https://iosfa.gob.ar/img/logo.svg" class="logo" alt="Logo IOSFA">
+<!--    <h1>Sistema de Turnos</h1> -->
+  </header>
+
+  <!-- Recuadros principales -->
+  <div class="contenedor">
+    <div id="reintegros" class="area">
+      <div class="mesa">Reintegros</div>
+      <div class="numero">-</div>
+      <div class="color">Blanco</div>
+    </div>
+    <div id="medicamentos" class="area">
+      <div class="mesa">Medicamentos</div>
+      <div class="numero">-</div>
+      <div class="color">Verde</div>
+    </div>
+    <div id="autorizaciones" class="area">
+      <div class="mesa">Autorizaciones</div>
+      <div class="numero">-</div>
+      <div class="color">Amarillo</div>
+    </div>
+  </div>
+
+  <audio id="sonido" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+  <script>
+    const socket = io();
+    const sonido = document.getElementById("sonido");
+  
+    const nombres = {
+      reintegros: "Blanco",
+      medicamentos: "Verde",
+      autorizaciones: "Amarillo"
+    };
+  
+    // 🔹 Nueva función: ajusta el tamaño del número según la cantidad de cifras
+    function ajustarTamañoNumero(elemento) {
+      const largo = elemento.textContent.trim().length;
+      if (largo <= 1) {
+        elemento.style.fontSize = "25em";
+      } else if (largo === 2) {
+        elemento.style.fontSize = "18em";
+      } else {
+        elemento.style.fontSize = "14em";
+      }
+    }
+  
+    socket.on("turno-llamado", (t) => {
+      sonido.play();
+  
+      const areaDiv = document.getElementById(t.area);
+      if (areaDiv) {
+        const numeroDiv = areaDiv.querySelector(".numero");
+        const colorDiv = areaDiv.querySelector(".color");
+        numeroDiv.textContent = t.turno;
+        colorDiv.textContent = nombres[t.area];
+  
+        // 🔹 Ajusta tamaño según cantidad de dígitos
+        ajustarTamañoNumero(numeroDiv);
+  
+        areaDiv.classList.remove("blanco", "verde", "amarillo");
+        if (t.area === "reintegros") areaDiv.classList.add("blanco");
+        if (t.area === "medicamentos") areaDiv.classList.add("verde");
+        if (t.area === "autorizaciones") areaDiv.classList.add("amarillo");
+  
+        areaDiv.classList.add("destacado");
+        setTimeout(() => areaDiv.classList.remove("destacado"), 800);
+      }
+    });
+  </script>
+</body>
+</html>

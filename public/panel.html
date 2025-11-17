@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Llamado de Turnos</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .box {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      width: 420px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1.8em;
+    }
+
+    select, input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 80%;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      width: 85%;
+      margin-top: 10px;
+      padding: 12px;
+      font-weight: bold;
+      transition: 0.15s;
+    }
+
+    .btn-main { background: blue; color: white; }
+    .btn-warn { background: #08af02; color: black; }
+    .btn-danger { background: red; color: white; }
+
+    .btn-nav {
+      background: #3ABACA;
+      color: white;
+    }
+
+    .btn-nav:hover {
+      transform: scale(1.07);
+      background: #2da3b1;
+    }
+
+    .btns {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-section {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Llamar turno</h2>
+
+    <label>Área:</label><br>
+    <select id="area">
+      <option value="medicamentos" data-color="#2196f3">Medicamentos 🟢</option>
+      <option value="autorizaciones" data-color="#4caf50">Autorizaciones 🟡</option>
+    </select><br>
+
+    <label>Número actual:</label><br>
+    <input id="turno" value="1" style="width:80px; text-align:center;"><br>
+
+    <div class="btns">
+      <button class="btn-main" onclick="llamarTurno()">📣 Llamar</button>
+      <button class="btn-warn" onclick="llamarSiguiente()">⏭️ Llamar siguiente</button>
+      <button class="btn-danger" onclick="reiniciar()">🔄 Reiniciar todo</button>
+    </div>
+
+    <!-- 🔹 Sección de navegación -->
+    <div class="nav-section">
+      <button class="btn-nav" onclick="location.href='/medicamentos'">📘 Ir a Medicamentos</button>
+      <button class="btn-nav" onclick="location.href='/autorizaciones'">📗 Ir a Autorizaciones</button>
+    </div>
+
+  </div>
+
+  <script>
+    const socket = io();
+    const contadores = { reintegros: 1, medicamentos: 1, autorizaciones: 1 };
+
+    function llamarTurno() {
+      const area = document.getElementById("area").value;
+      const color = document.getElementById("area").selectedOptions[0].dataset.color;
+      const turno = parseInt(document.getElementById("turno").value.trim());
+      if (!turno) return alert("Ingrese un número de turno");
+
+      contadores[area] = turno;
+
+      socket.emit("nuevo-turno", { turno, area, color, hora: new Date().toLocaleTimeString() });
+    }
+
+    function llamarSiguiente() {
+      const area = document.getElementById("area").value;
+      const color = document.getElementById("area").selectedOptions[0].dataset.color;
+      contadores[area]++;
+      document.getElementById("turno").value = contadores[area];
+
+      socket.emit("nuevo-turno", {
+        turno: contadores[area],
+        area,
+        color,
+        hora: new Date().toLocaleTimeString()
+      });
+    }
+
+    function reiniciar() {
+      if (confirm("¿Seguro que querés reiniciar todos los turnos?")) {
+        Object.keys(contadores).forEach(k => contadores[k] = 1);
+        document.getElementById("turno").value = 1;
+        socket.emit("reiniciar");
+      }
+    }
+
+    document.getElementById("area").addEventListener("change", (e) => {
+      const area = e.target.value;
+      document.getElementById("turno").value = contadores[area];
+    });
+  </script>
+</body>
+</html>

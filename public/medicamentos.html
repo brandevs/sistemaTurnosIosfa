@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Medicamentos</title>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+
+    header {
+      height: 70px;      /* 🔹 altura fija */
+      width: 100%;
+      background: white;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 20px;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: rgb(58, 186, 202);
+      color: black;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+    }
+
+    .logo {
+      height: 50px;
+      width: auto;
+    }
+
+    .area {
+      margin: 20px; /* 🔹 20px en todos los lados */
+      background: #4CAF50;
+      border-radius: 15px;
+
+      width: calc(100% - 40px);      /* 20px izq + 20px der */
+      height: calc(100vh - 70px - 40px); 
+      /*
+        100vh
+        - 20px margen superior del .area
+        - 50px altura del header (ajustable si cambia)
+      */
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      overflow: hidden;      /* IMPIDE que algo se salga */
+
+      box-shadow:
+        inset 20px 0 40px rgba(0,0,0,0.25),
+        inset -20px 0 40px rgba(0,0,0,0.25),
+        0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .mesa {
+      font-size: 6em;
+      font-weight: bold;
+      margin-top: 10px; /* separadito */
+    }
+
+    .numero {
+      font-size: 28em;       /* ¡Bien grande! */
+      font-weight: bold;
+      line-height: 1;
+      flex-grow: 1;          /* 🔥 Esto hace que ocupe el centro */
+      color: white;
+
+      /* 🔹 BORDE DEL TEXTO */
+      -webkit-text-stroke: 6px black;  /* borde negro grueso */
+      color: white;                    /* color del relleno */
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+        /* 🔹 Saca cualquier espacio extra */
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 🔹 Color abajo */
+    .color {
+      font-size: 3em;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    /* 🔹 Estilo general compartido por mesa, numero y color */
+    .mesa, .color {
+      border: 2px solid white;     /* borde fino */
+      padding: 2px 10px;          /* espacio interno */
+      border-radius: 12px;         /* bordes redondeados */
+      background: rgba(255,255,255,0.15);  /* fondo translúcido */
+      backdrop-filter: blur(2px);  /* efecto vidrio suave */
+      color: white;                /* texto blanco */
+      text-shadow: 1px 1px 2px black; /* mejora la legibilidad */
+
+      max-width: 90%;        /* Nunca se pasan del área */
+      box-sizing: border-box;
+    }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <img src="https://iosfa.gob.ar/img/logo.svg" class="logo" alt="Logo IOSFA">
+    <!--    <h1>Sistema de Turnos</h1> -->
+  </header>
+
+  <div id="medicamentos" class="area">
+    <div class="mesa">MEDICAMENTOS</div>
+    <div class="numero">-</div>
+    <div class="color">VERDE</div>
+  </div>
+
+  <script>
+    const socket = io();
+
+    socket.on("turno-llamado", (t) => {
+      if (t.area !== "medicamentos") return;
+
+      const area = document.getElementById("medicamentos");
+      area.querySelector(".numero").textContent = t.turno;
+    });
+  </script>
+</body>
+</html>

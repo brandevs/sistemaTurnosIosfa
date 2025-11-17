@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Autorizaciones</title>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+
+    header {
+      height: 70px;
+      width: 100%;
+      background: white;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 20px;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: rgb(58, 186, 202);
+      color: black;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+    }
+
+    .logo {
+      height: 50px;
+      width: auto;
+    }
+
+    /* AREA con los mismos estilos que medicamentos */
+    .area {
+      margin: 20px;
+      background: #FFEB3B;
+      border-radius: 15px;
+      width: calc(100% - 40px);
+      height: calc(100vh - 70px - 40px);
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      overflow: hidden;  /* 🔥 EVITA que algo salga fuera del contenedor */
+
+      box-shadow:
+        inset 20px 0 40px rgba(0,0,0,0.25),
+        inset -20px 0 40px rgba(0,0,0,0.25),
+        0 0 10px rgba(0,0,0,0.3);
+    }
+
+    /* Mesa igual estilo */
+    .mesa {
+      font-size: 6em;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    /* Número estilo completo */
+    .numero {
+      font-size: 28em;
+      font-weight: bold;
+      line-height: 1;
+      flex-grow: 1;
+      color: white;
+
+      -webkit-text-stroke: 6px black;
+      color: white;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Color abajo */
+    .color {
+      font-size: 3em;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    /* Fondo translúcido, bordes y blur para mesa y color */
+    .mesa, .color {
+      border: 2px solid white;
+      padding: 2px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(2px);
+      color: white;
+      text-shadow: 1px 1px 2px black;
+
+      max-width: 90%;   /* 🔥 NO se salen del área */
+      box-sizing: border-box;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="https://iosfa.gob.ar/img/logo.svg" class="logo" alt="Logo IOSFA">
+  </header>
+
+  <div id="autorizaciones" class="area">
+    <div class="mesa">AUTORIZACIONES</div>
+    <div class="numero">-</div>
+    <div class="color">AMARILLO</div>
+  </div>
+
+  <script>
+    const socket = io();
+
+    socket.on("turno-llamado", (t) => {
+      if (t.area !== "autorizaciones") return;
+
+      const area = document.getElementById("autorizaciones");
+      area.querySelector(".numero").textContent = t.turno;
+    });
+  </script>
+</body>
+</html>
